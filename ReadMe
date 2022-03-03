@@ -5,7 +5,7 @@ For some example plots --> Documentation
 
 How to run the code?? 
     - install numpy and matplotlib 
-    - from OFDM_System, run: python OFDM_System.py 
+    - from OFDM-System, run: python OFDM_System.py 
 
 Basic features are:
 - 16QAM IQ - Mapper,
