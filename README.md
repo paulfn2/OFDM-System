@@ -1,6 +1,4 @@
 # OFDM-System
-ReadMe.readme
-# OFDM System Simulator
 
 This project was created to simulate a data transmission from a ofdm - transmitter over a awgn channel to a ofdm receiver.
 
