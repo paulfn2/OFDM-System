@@ -11,7 +11,7 @@ class OfdmSystem:
     receiver = None
     transmitter = None
     channel = None
-    SNR_dB = 10
+    SNR_dB = 60
 
     def __init__(self):
         self.transmitter = Transmitter(seed=None)
@@ -24,19 +24,35 @@ class OfdmSystem:
         rx_bitstream = self.start_transmission()
         self.analyse_transmission_quality(rx_bitstream)
         self.plot_signals()
+        self.cfo_estimation()
         plt.show()
+
+    def cfo_estimation(self):
+        iq_signal = Database.received_iq_signal
+        iq_signal = np.asarray(iq_signal)
+        #iq_signal = 1/np.sqrt(np.nanvar(iq_signal)) * iq_signal
+        iq_signal = np.convolve(iq_signal, Database.impulse_answer, "same")
+        iq_signal = np.convolve(iq_signal, Database.impulse_answer, "same")
+        SpectrumAnalyser.plot_power_spectrum(iq_signal,len(iq_signal))
+        iq_signal = np.power(np.abs(iq_signal),2)
+        IQ_SIG = 10*np.log10(np.fft.fftshift(np.abs(np.fft.fft(iq_signal))))
+        print(len(IQ_SIG))
+        iq_signal = list(iq_signal)
+        SpectrumAnalyser.plot_time_signal(IQ_SIG)
 
     @staticmethod
     def plot_signals():
-        SpectrumAnalyser.plot_iq_chart(Database.received_iq_signal)
-        SpectrumAnalyser.plot_power_spectrum(Database.bandpass_signal, 2048)
+        #SpectrumAnalyser.plot_iq_chart(Database.received_iq_signal)
+        #SpectrumAnalyser.plot_time_signal(Database.received_iq_signal)
+        #SpectrumAnalyser.plot_power_spectrum(Database.bandpass_signal, 2048)
         #SpectrumAnalyser.plot_power_spectrum(Database.impulse_answer, len(Database.impulse_answer))
+        pass
 
     def start_transmission(self) -> list:
         buffer_1024_bit = []
         rx_bitstream = []
         cnt = 0
-        while cnt < 50:
+        while cnt < 10:
             bit = self.transmitter.get_single_random_bit()
 
             if len(buffer_1024_bit) == 1024:

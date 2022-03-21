@@ -4,7 +4,7 @@
 class Database:
 
     # Settings
-    cfo_percent = 0.01
+    cfo_percent = 0#0.01
 
     received_iq_signal = []
     send_iq_signal = []
@@ -19,7 +19,6 @@ class Database:
 
     @staticmethod
     def add_iq_samples_to_received_signal(rx_iq_signal):
-
         Database.received_iq_signal = Database.received_iq_signal + list(rx_iq_signal)
 
     @staticmethod

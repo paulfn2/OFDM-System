@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from Factory import Factory
 from Database import Database
 import numpy as np
