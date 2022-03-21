@@ -1,27 +1,17 @@
-import queue
-import numpy as np
-
-
+# the purpose of this class is to save signals or parameters that seems interesting
+# on the processing chain
+# Config Data can also be saved here
 class Database:
 
     # Settings
-    SNR = 10
-    cfo_percent: float = 0.000
-    received_iq_signal: list = []
-    send_iq_signal: list = []
-    rx_bitstream: list = []
-    tx_bitstream: list = []
-    bandpass_signal: list = []
-    impulse_answer: list = []
-    spectrum_bp_signal: list = []
-    received_bits: int = 0
-    error_bits: int = 0
-    ber: float = 0
-    signal_queue: queue.Queue = None
+    cfo_percent = 0.01
 
-    @staticmethod
-    def set_queue_for_ipc(signal_queue: queue.Queue):  # ipc = interprocess communication
-        Database.signal_queue = signal_queue
+    received_iq_signal = []
+    send_iq_signal = []
+    rx_bitstream = []
+    tx_bitstream = []
+    bandpass_signal = []
+    impulse_answer = []
 
     @staticmethod
     def save_impulse_answer_rrc_filter(impulse_answer):
@@ -29,6 +19,7 @@ class Database:
 
     @staticmethod
     def add_iq_samples_to_received_signal(rx_iq_signal):
+
         Database.received_iq_signal = Database.received_iq_signal + list(rx_iq_signal)
 
     @staticmethod
@@ -45,22 +36,4 @@ class Database:
 
     @staticmethod
     def save_bandpass_signaL(bandpass_signal):
-        Database.bandpass_signal = bandpass_signal
-        Database.signal_queue.put(np.asarray(bandpass_signal))
-
-    @staticmethod
-    def save_spectrum_bandpass_signal(spec_bp_signal):
-        Database.spectrum_bp_signal = Database.spectrum_bp_signal + list(spec_bp_signal)
-
-    # ToDo Make analytics data exchange thread save
-    @staticmethod
-    def save_mean_BER(ber):
-        Database.ber = ber
-
-    @staticmethod
-    def save_total_number_of_received_bits(received_bits):
-        Database.received_bits = received_bits
-
-    @staticmethod
-    def save_wrong_received_bits(error_bits):
-        Database.error_bits = error_bits
+        Database.bandpass_signal = Database.bandpass_signal + list(bandpass_signal)

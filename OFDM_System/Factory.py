@@ -1,5 +1,5 @@
-from OFDM_System.Filterdesigner import Filterdesigner
-from OFDM_System.IQModem import IQModem
+from Filterdesigner import Filterdesigner
+from IQModem import IQModem
 
 
 class Factory:

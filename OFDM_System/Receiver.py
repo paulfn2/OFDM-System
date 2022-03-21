@@ -1,5 +1,5 @@
-from OFDM_System.Factory import Factory
-from OFDM_System.Database import Database
+from Factory import Factory
+from Database import Database
 import numpy as np
 
 
@@ -9,7 +9,7 @@ class Receiver:
         self.Filterdesigner = Factory.create_filter_designer()
         self.IQModem = Factory.create_IQ_Modem(self.Filterdesigner, 8)
 
-    def receiver_processing_chain(self, rx_signal: list) -> list:
+    def receiver_processing_chain(self, rx_signal: list):
         rx_signal_i = self.IQModem.extract_real_part_from_rx_signal(rx_signal)
         rx_signal_q = self.IQModem.extract_imag_part_from_rx_signal(rx_signal)
         rx_analytic_signal = self._create_analytic_time_signal(rx_signal_i, rx_signal_q)
@@ -64,3 +64,20 @@ class Receiver:
             return [1, 0]
         else:
             return [1, 1]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

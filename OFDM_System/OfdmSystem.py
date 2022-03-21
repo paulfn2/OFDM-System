@@ -1,12 +1,9 @@
-import multiprocessing
-import queue
-import threading
 import numpy as np
-from OFDM_System.Database import Database
-from OFDM_System.SpectrumAnalyser import SpectrumAnalyser
-from OFDM_System.Transmitter import Transmitter
-from OFDM_System.Receiver import Receiver
-from OFDM_System.Channel import Channel
+from Database import Database
+from SpectrumAnalyser import SpectrumAnalyser
+from Transmitter import Transmitter
+from Receiver import Receiver
+from Channel import Channel
 import matplotlib.pyplot as plt
 
 
@@ -14,62 +11,62 @@ class OfdmSystem:
     receiver = None
     transmitter = None
     channel = None
-    run_simulation = True
-    SNR_dB = Database.SNR
-    Analyser = None
+    SNR_dB = 10
 
     def __init__(self):
         self.transmitter = Transmitter(seed=None)
         self.receiver = Receiver()
         self.channel = Channel()
         self.tx_bitstream = []
-        self.Analyser = AnalysingThread()
 
-    def start_simulation(self, signal_queue, analysis_result_queue):
-        Database.set_queue_for_ipc(signal_queue)  # has to be implemented!!
-        bitstream_queue = queue.Queue()
-        # parallel thread for BER and error rate analysis ! (Data is saved in database??)
-        analysis_thread = threading.Thread(target=self.Analyser.analyse_transmission_quality,
-                                           args=(bitstream_queue, analysis_result_queue))
-        analysis_thread.start()
+    def run_radio_in_the_loop(self):
 
-        rx_bitstream = self.start_transmission(bitstream_queue)
-        # self.analyse_transmission_quality(rx_bitstream)
+        rx_bitstream = self.start_transmission()
+        self.analyse_transmission_quality(rx_bitstream)
         self.plot_signals()
         plt.show()
-
-    def stop_simulation(self):
-        self.run_simulation = False
 
     @staticmethod
     def plot_signals():
         SpectrumAnalyser.plot_iq_chart(Database.received_iq_signal)
         SpectrumAnalyser.plot_power_spectrum(Database.bandpass_signal, 2048)
+        #SpectrumAnalyser.plot_power_spectrum(Database.impulse_answer, len(Database.impulse_answer))
 
-    def start_transmission(self, bitstream_queue) -> list:
+    def start_transmission(self) -> list:
         buffer_1024_bit = []
         rx_bitstream = []
-
-        while True:
-
-            if not self.run_simulation:
-                break
-
+        cnt = 0
+        while cnt < 50:
             bit = self.transmitter.get_single_random_bit()
 
             if len(buffer_1024_bit) == 1024:
                 self.tx_bitstream = self.tx_bitstream + buffer_1024_bit.copy()
                 tx_signal = self.transmitter.transmitter_processing_chain(buffer_1024_bit)
+                #print("Power(dBm) TX Signal", 10 * np.log10(self.measure_signal_power(tx_signal)))
                 tx_signal = self.transmit_signal(tx_signal)
                 Database.save_bandpass_signaL(bandpass_signal=tx_signal)
-                rx_frame: list = self.receiver.receiver_processing_chain(tx_signal)
+                #print("TX Power (dBm) TX Signal after AWGN", 10 * np.log10(self.measure_signal_power(tx_signal)))
+                rx_frame = self.receiver.receiver_processing_chain(tx_signal)
                 rx_bitstream = rx_bitstream + rx_frame
-                queue_data = buffer_1024_bit + rx_frame
-                bitstream_queue.put(queue_data)  # add tx and rx signal to queue for BER analysis
                 buffer_1024_bit.clear()
+                cnt += 1
             buffer_1024_bit.append(bit)
-
         return rx_bitstream
+
+    def analyse_transmission_quality(self, rx_bitstream):
+        bit_cnt = len(rx_bitstream)
+        print("Total number of transmitted bits: ", bit_cnt)
+        error_cnt = 0
+        BER = 0
+        for i in range(len(rx_bitstream)):
+            if self.tx_bitstream[i] != rx_bitstream[i]:
+                error_cnt += 1
+        print("False received Bits: ", error_cnt)
+
+        if error_cnt != 0:
+            BER = 100 * error_cnt / len(rx_bitstream)
+            BER = np.round(BER,3)
+        print("BER: ", BER, " %")
 
     def transmit_signal(self, tx_signal):
         white_noise = self.create_noise(tx_signal)
@@ -99,37 +96,5 @@ class OfdmSystem:
         return noise_power
 
 
-class AnalysingThread:
-
-    database = None
-    tx_bitstream = []
-    rx_bitstream = []
-    BER = 0
-    bit_cnt = 0
-    error_cnt = 0
-
-    def analyse_transmission_quality(self, bitstream_queue, analysis_result_queue):
-        while True:
-            bitstream = bitstream_queue.get()
-            tx_bitstream = bitstream[:1024]
-            rx_bitstream = bitstream[1024:]
-            self.calculate_ber_and_error_rate(tx_bitstream, rx_bitstream)
-            liste = [self.BER, self.error_cnt, self.bit_cnt]
-            analysis_result_queue.put(liste)
-
-
-    # the optimum is to transfer the information back to the main thread and print the info there
-    def calculate_ber_and_error_rate(self, tx_bitstream, rx_bitstream):
-        self.tx_bitstream = self.tx_bitstream + tx_bitstream
-        self.rx_bitstream = self.rx_bitstream + rx_bitstream
-        bit_cnt = len(rx_bitstream)
-        self.bit_cnt = self.bit_cnt + bit_cnt
-        for i in range(len(rx_bitstream)):
-            if tx_bitstream[i] != rx_bitstream[i]:
-                self.error_cnt += 1
-        if self.error_cnt != 0:
-            self.BER = 100 * self.error_cnt / len(self.rx_bitstream)
-
-
-if __name__ == "__main__":
-    ofdm_system = OfdmSystem()
+ofdm_system = OfdmSystem()
+ofdm_system.run_radio_in_the_loop()

@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import random
-from OFDM_System.Factory import Factory
-from OFDM_System.Database import Database
+from Factory import Factory
+from Database import Database
 
 
 class Transmitter:

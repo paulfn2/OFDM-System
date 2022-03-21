@@ -1,5 +1,5 @@
+from Filterdesigner import Filterdesigner
 
-#  -> Channel behavior still in OFDM_System implemented
 
 class Channel:
 

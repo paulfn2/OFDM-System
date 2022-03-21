@@ -1,6 +1,6 @@
 import numpy as np
 from numpy import cos, sin, pi, arange
-from OFDM_System.Database import Database
+from Database import Database
 
 
 class IQModem:
